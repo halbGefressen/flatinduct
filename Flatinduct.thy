@@ -3,15 +3,10 @@
 begin
 consts P1 :: "nat ⇒ bool" P2 :: "nat ⇒ bool"
 
-fun f where
-  "f (Suc (Suc x)) = (if P1 x then f(Suc x) else if P2 x then f x else f 0)"
-thm f.induct[of P n]
-
 fun f' where
-"f' 0 = 0" |
-"f' (Suc n) = (if n = 1 then f' 1 else f' n)"
+  "f' (Suc (Suc x)) = (if P1 x then f' (Suc x) else if P2 x then f' x else f' 0)"
+thm f'.induct[of P n]
 
-thm f'.induct[of P any]
 
 (* Test: The negation term can never occur here. Maybe try constructing a proof to False from the negation term and
  * do not add it if the proof succeeds? *)
@@ -20,9 +15,9 @@ lemma f_induct: "⟦⋀x. ⟦P1 x; P (Suc x)⟧ ⟹ P (Suc (Suc x));
        ⋀x. ⟦¬P1 x; ¬ P2 x; P 0⟧ ⟹ P (Suc (Suc x));
   P 0; P (Suc 0)⟧
 ⟹ P a"
-by (metis f.induct)
+by (metis f'.induct)
 
-lemma f_induct_exhaustive: "\<And>x. \<lbrakk> ⟦P1 x⟧ \<Longrightarrow> False;  ⟦¬P1 x; P2 x⟧ \<Longrightarrow> False;  ⟦¬P1 x; ¬ P2 x⟧ \<Longrightarrow> False\<rbrakk> \<Longrightarrow> False"
+lemma f'_induct_exhaustive: "\<And>x. \<lbrakk> ⟦P1 x⟧ \<Longrightarrow> False;  ⟦¬P1 x; P2 x⟧ \<Longrightarrow> False;  ⟦¬P1 x; ¬ P2 x⟧ \<Longrightarrow> False\<rbrakk> \<Longrightarrow> False"
   by blast (* Here it can be proved. *)
 
 fun g :: "nat ⇒ nat" where
@@ -63,16 +58,29 @@ lemma i_induct: "(\<And>n m. (\<And>x y nat.
  P n m"
   by (rule i.induct[of P]) (metis (no_types))+ (* no_types makes proof way faster *)
   (* also, this theorem is not provable by (metis i.induct), so the procedure can't rely on that *)
+
+
+(* README example *)
+
+fun f where
+"f 0 = 0" |
+"f (Suc n) = (if n = 1 then f 1 else f n)"
+thm f'.induct[of P any] (* ugly *)
+
+
 ML_file \<open>flatinduct.ML\<close>
 
-thm f'.induct[flatinduct, of P any]
-thm h.induct h.induct[flatinduct]
+thm f.induct[flatinduct, of P any] (* tadaaa *)
 
-find_theorems name:".induct"
+thm f.induct[flatinduct] (* basic test cases *)
+    g.induct[flatinduct]
+    h.induct[flatinduct]
+    i.induct[flatinduct]
 
 (* TODO: Testing *)
-(* vorschlag erkennung: metavariablen hintereinander \<rightarrow> ausprobieren welcher metis call beste ist *)
-(* speccheck verwenden zum testen *)
+(* suggestion: check which metis call is best suited *)
+(* use speccheck for testing *)
+(* find_theorems name:".induct" *)
 
 
 end
