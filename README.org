@@ -3,24 +3,13 @@
 This project aims to improve working with inductions over large functions with many inner case distinctions in Isabelle/HOL.
 
 * The problem
-Isabelle usually generates an induction rule for each constructor pattern in a function definition. For example, inspect this function:
+Isabelle usually generates an induction rule for each constructor pattern in a function definition. For example, inspect this function and an inductive proof using the default induction rule:
 
 #+begin_src isabelle
 fun f where
 "f 0 = 0" |
 "f (Suc n) = (if n = 1 then f 1 else f n)"
 
-thm f.induct[of P any]
-(*
-  [| P 0;
-     /\n. [| n = 1 ==> P 1; n ~= 1 ==> P n |] ==> P (Suc n)
-  |] ==> P any
-*)
-#+end_src
-
-As you can see, the induction rule was generated correctly with a case for each constructor pattern. However, there is an inner case distinction in the second case. While this is correct, it complicates the proof pattern because the second case is immediately followed by a case distinction:
-
-#+begin_src isabelle
 lemma "foo (f x)"
 proof (induction rule: f.induct)
   case 0 [...]
@@ -39,18 +28,28 @@ next
 qed
 #+end_src
 
-As you can see, there is a lot of boilerplate proof code here that does nothing but make the proof less readable. Furthermore, the proof automation of Isabelle often takes a huge hit from each level of case distinctions if they are not manually split previously (like in the example).
+As you can see, the induction rule was generated correctly with a case for each constructor pattern. However, there is an inner case distinction in the second case. While this is correct, it complicates the proof pattern because the second case is immediately followed by a case distinction. This results in a lot of boilerplate proof code here that does nothing but make the proof less readable. Furthermore, the proof automation of Isabelle often takes a huge hit from each level of case distinctions if they are not manually split previously (like in the example).
 
 * The solution
-The ~flatinduct~ attribute pulls the case distinctions to the top level. Let's inspect the new induction rule and the resulting proof structure:
+The ~flatinduct~ attribute pulls the case distinctions to the top level by applying a transformation on the specified theorem. Let's compare the initial rule to the flattened induction rule.
 
 #+begin_src isabelle
+thm f.induct[of P any]
+(* [| P 0;
+     /\n. [| n = 1 ==> P 1;
+             n ~= 1 ==> P n
+          |] ==> P (Suc n)
+  |] ==> P any *)
+
 thm f.induct[flatinduct, of P any]
 (* [|  P 0;
-       /\n. n  = 1 ==> P 1 ==> P (Suc n);
-       /\n. n ~= 1 ==> P n ==> P (Suc n)
-   |] ==> P any*)
+       /\n. [| n  = 1; P 1 |] ==> P (Suc n);
+       /\n. [| n ~= 1; P n |] ==> P (Suc n)
+   |] ==> P any *)
+#+end_src
 
+As you can see, the subgoal has been pulled into the case distinction in the transformed rule. This results in a way simpler proof pattern:
+#+begin_src isabelle
 lemma "foo (f x)"
 proof (induction rule: f.induct[flatinduct])
   case 0 (* P 0 *)
