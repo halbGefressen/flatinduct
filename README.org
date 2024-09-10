@@ -59,7 +59,7 @@ next
   case 1 (* [| n  = 1; P 1 |] ==> P (Suc n) *)
   then show ?case sorry
 next
-  case 2 (* [| n ~= 1; P n |] \<Longrightarrow> P (Suc n) *)
+  case 2 (* [| n ~= 1; P n |] ==> P (Suc n) *)
   then show ?case sorry
 qed
 #+end_src
