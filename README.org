@@ -48,7 +48,7 @@ thm f.induct[flatinduct, of P any]
    |] ==> P any *)
 #+end_src
 
-As you can see, the subgoal has been pulled into the case distinction in the transformed rule. This results in a way simpler proof pattern:
+As you can see, the subgoal has been pulled into the case distinction in the transformed rule, resulting in the following proof pattern:
 #+begin_src isabelle
 lemma "foo (f x)"
 proof (induction rule: f.induct[flatinduct])
