@@ -3,6 +3,8 @@
 begin
 consts P1 :: "nat ⇒ bool" P2 :: "nat ⇒ bool"
 
+section \<open>Defining testing functions\<close>
+
 fun f' where
   "f' (Suc (Suc x)) = (if P1 x then f' (Suc x) else if P2 x then f' x else f' 0)"
 thm f'.induct[of P n]
@@ -60,7 +62,7 @@ lemma i_induct: "(\<And>n m. (\<And>x y nat.
   (* also, this theorem is not provable by (metis i.induct), so the procedure can't rely on that *)
 
 
-(* README example *)
+section \<open>README example\<close>
 
 fun f where
 "f 0 = 0" |

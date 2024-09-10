@@ -65,3 +65,6 @@ qed
 #+end_src
 
 This looks much cleaner. Additionally, the automation benefits from not having to split the induction hypothesis manually if a short (non-Isar) proof were to be attempted.
+
+* How does it work?
+As you would intuitively do it by hand. For further detail, I have added (hopefully sufficient) comments to the source.
