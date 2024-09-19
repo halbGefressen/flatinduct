@@ -1,10 +1,10 @@
 (* Author: Christian Zimmerer *)
-signature FLATCASES =
+signature FLATINDUCT =
 sig
   val flatinduct : Proof.context -> Thm.thm -> Thm.thm
 end;
 
-structure Flatcasese : FLATCASES =
+structure Flatinduct : FLATINDUCT =
 struct
 
 (* Shorthand for (metis (no_types)). *)
