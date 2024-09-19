@@ -1,4 +1,10 @@
-﻿theory Flatinduct
+﻿(* Authors:
+ * Kevin Kappelmann
+ * Tobias Nipkow
+ * Christian Zimmerer
+ * *)
+
+theory Flatinduct
   imports Complex_Main
 begin
 consts P1 :: "nat ⇒ bool" P2 :: "nat ⇒ bool"
