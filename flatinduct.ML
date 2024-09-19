@@ -12,10 +12,10 @@ fun metis_default_tac ctxt = (Metis_Tactic.metis_tac [ATP_Proof_Reconstruct.no_t
                                      ATP_Problem_Generate.combsN ctxt [] 1)
 
 (* Simple pattern equality check for predicates. *)
-fun is_P (Const ("HOL.Trueprop", propsig ) $ (bprop  $ _))
-         (Const ("HOL.Trueprop", propsig') $ (bprop' $ _))
-        = propsig = propsig' andalso bprop = bprop'
-  | is_P _ _ = false
+fun is_P t1 t2 =
+  let val relevant_terms = strip_comb ##> hd ##> head_of
+  in (relevant_terms t1 = relevant_terms t2) handle Empty => false
+  end 
 
 (* Checks if a thrm was probably generated from a case distinction. Basically a pattern match. *)
 fun is_split_induct_case concl t =
