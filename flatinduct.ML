@@ -77,7 +77,7 @@ fun flatinduct ctxt t =
   let val ((vars, t), ctxt') = (Variable.import true [t] ctxt) |>> (I ##> hd)
       val tactic = (fn _ => (* by (rule t) (metis (no_types))+ *)
         (resolve_tac ctxt' [Thm.instantiate vars t] 1) THEN
-         REPEAT (metis_default_tac ctxt'))
+         REPEAT (SMT_Solver.smt_tac ctxt' [] 1))
       val proven = Goal.prove ctxt [] [] (flatinduct_rewrite ctxt t) tactic
   in singleton (Variable.export ctxt' ctxt) proven
   end

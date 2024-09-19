@@ -59,12 +59,18 @@ fun i :: "nat \<Rightarrow> nat \<Rightarrow> bool" where
 thm i.induct
 
 lemma i_induct: "(\<And>n m. (\<And>x y nat.
-      (x, y) = (n, m) \<Longrightarrow> x = 0 \<Longrightarrow> y = Suc nat \<Longrightarrow> nat = 0 \<Longrightarrow> P 0 0) \<Longrightarrow>
+      (x, y) = (n, m) \<Longrightarrow> x = 0 \<Longrightarrow> y = Suc nat \<Longrightarrow> nat = 0 \<Longrightarrow> False) \<Longrightarrow>
      (\<And>x y nat nata.
-      (x, y) = (n, m) \<Longrightarrow> x = Suc nat \<Longrightarrow> y = Suc nata \<Longrightarrow> P nat nata) \<Longrightarrow>
+      (x, y) = (n, m) \<Longrightarrow> x = Suc nat \<Longrightarrow> y = Suc nata \<Longrightarrow> False) \<Longrightarrow>
      P n m) \<Longrightarrow>
- P n m"
-  by (rule i.induct[of P]) (metis (no_types))+ (* no_types makes proof way faster *)
+    (\<And>n m x y nat.
+     (x, y) = (n, m) \<Longrightarrow> x = 0 \<Longrightarrow> y = Suc nat \<Longrightarrow> nat = 0 \<Longrightarrow> P 0 0 \<Longrightarrow> P n m) \<Longrightarrow>
+    (\<And>n m x y nat nata.
+     (x, y) = (n, m) \<Longrightarrow>
+     x = Suc nat \<Longrightarrow> y = Suc nata \<Longrightarrow> P nat nata \<Longrightarrow> P n m) \<Longrightarrow>
+    P a b"
+  apply (rule i.induct[of P])
+    apply smt+ done
   (* also, this theorem is not provable by (metis i.induct), so the procedure can't rely on that *)
 
 
@@ -90,5 +96,16 @@ thm f.induct[flatinduct] (* basic test cases *)
 (* use speccheck for testing *)
 (* find_theorems name:".induct" *)
 
+consts fst_nat :: "nat ⇒ nat"
+     snd_nat :: "nat ⇒ nat"
+     Cons_nat :: "nat ⇒ nat ⇒ nat"
+
+  function rev_tail_aux_nat' :: "nat ⇒ nat ⇒ nat" where
+     "rev_tail_aux_nat' xs acc = (if fst_nat xs = 0 then acc else
+       rev_tail_aux_nat' (snd_nat (snd_nat xs)) (Cons_nat (fst_nat
+  (snd_nat xs)) acc))"
+  by auto termination sorry
+  thm rev_tail_aux_nat'.induct
+  thm rev_tail_aux_nat'.induct[flatinduct] (* basic test cases *)
 
 end
