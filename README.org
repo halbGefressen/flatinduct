@@ -34,6 +34,8 @@ As you can see, the induction rule was generated correctly with a case for each 
 The ~flatinduct~ attribute pulls the case distinctions to the top level by applying a transformation on the specified theorem. Let's compare the initial rule to the flattened induction rule.
 
 #+begin_src isabelle
+ML_file \<open>flatinduct.ML\<close>
+
 thm f.induct[of P any]
 (* [| P 0;
      /\n. [| n = 1 ==> P 1;
