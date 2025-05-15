@@ -1,15 +1,16 @@
 (* Author: Christian Zimmerer *)
 signature FLATINDUCT =
 sig
-  val flatinduct : Proof.context -> Thm.thm -> Thm.thm
+  val flatinduct : int -> Proof.context -> Thm.thm -> Thm.thm
+  val flatinduct_rewrite : Proof.context -> Thm.thm -> Term.term
 end;
 
 structure Flatinduct : FLATINDUCT =
 struct
 
 (* Shorthand for (metis (no_types)). *)
-fun metis_default_tac ctxt = (Metis_Tactic.metis_tac [ATP_Proof_Reconstruct.no_type_enc]
-                                     ATP_Problem_Generate.combsN ctxt [] 1)
+val metis_default_tac = (Metis_Tactic.metis_tac [ATP_Proof_Reconstruct.no_type_enc]
+                                     ATP_Problem_Generate.combsN)
 
 (* Simple pattern equality check for predicates. *)
 fun is_P t1 t2 =
@@ -53,7 +54,7 @@ fun transform_split_induct_case ctxt t =
                             (Goal.prove ctxt [] []
                                ((vars, (map negator preconds, @{term "Trueprop False"}))
                                  ||> Logic.list_implies |> Logic.list_all)
-                               (K (metis_default_tac ctxt)))
+                               (K (metis_default_tac ctxt [] 1)))
                              handle ERROR _ => false) (* haven't found a better way :< *)
                            handle Time.Time => false
       (* Conditional append: Either apply identity or "function prepending the case to list" *)
@@ -73,17 +74,21 @@ fun flatinduct_rewrite ctxt t =
   end
 
 (* Generates and proves the flattened form of the specified induction rule. *)
-fun flatinduct ctxt t =
+fun flatinduct timeout_seconds ctxt t =
   let val ((vars, t), ctxt') = (Variable.import true [t] ctxt) |>> (I ##> hd)
       val tactic = (fn _ => (* by (rule t) (metis (no_types))+ *)
         (resolve_tac ctxt' [Thm.instantiate vars t] 1) THEN
-         REPEAT (metis_default_tac ctxt'))
-      val proven = Goal.prove ctxt [] [] (flatinduct_rewrite ctxt t) tactic
+         REPEAT (PARALLEL_CHOICE [
+            metis_default_tac ctxt' [Thm.instantiate vars t] 1,
+            SMT_Solver.smt_tac ctxt' [Thm.instantiate vars t] 1,
+            blast_tac ctxt' 1
+    ]))
+    val proven = Timeout.apply (Time.fromSeconds timeout_seconds) Goal.prove ctxt [] [] (flatinduct_rewrite ctxt t) tactic
   in singleton (Variable.export ctxt' ctxt) proven
   end
 
 val _ = Theory.setup (Attrib.setup \<^binding>\<open>flatinduct\<close>
-  (Scan.succeed (Thm.rule_attribute [] (flatinduct o Context.proof_of)))
+  (Scan.succeed (Thm.rule_attribute [] (flatinduct 30 o Context.proof_of)))
     "pulls the case splits in induction rules to the top level")
 
 end;
